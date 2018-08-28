@@ -10,7 +10,7 @@ import UIKit
 
 class AceListViewController: UITableViewController {
     
-    let itemArray = ["Make App", "Market App", "Get Rich"]
+    var itemArray = ["Make App", "Market App", "Get Rich"]
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -50,6 +50,33 @@ class AceListViewController: UITableViewController {
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
+    
+    //MARK - Add new items
+    
+    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+        
+        var textField = UITextField()
+        
+        let alert = UIAlertController(title: "Add New Item", message: "", preferredStyle: .alert)
+        let action = UIAlertAction(title: "Add", style: .default) { (action) in
+            if let enteredText = textField.text, !enteredText.isEmpty {
+                self.itemArray.append(enteredText)
+                self.tableView.reloadData()
+            }
+        }
+        
+        alert.addTextField { (alertTextField) in
+            alertTextField.placeholder = "Enter New Item"
+            textField = alertTextField
+        }
+        
+        alert.addAction(action)
+        
+        present(alert, animated: true, completion: nil)
+        
+    }
+    
     
 }
 
