@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		507F26842135F9E900033EA7 /* Item.swift in Sources */ = {isa = PBXBuildFile; fileRef = 507F26832135F9E900033EA7 /* Item.swift */; };
 		50C5E44321349EFB008578EE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50C5E44221349EFB008578EE /* AppDelegate.swift */; };
 		50C5E44521349EFB008578EE /* AceListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50C5E44421349EFB008578EE /* AceListViewController.swift */; };
 		50C5E44821349EFB008578EE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 50C5E44621349EFB008578EE /* Main.storyboard */; };
@@ -15,6 +16,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		507F26832135F9E900033EA7 /* Item.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Item.swift; sourceTree = "<group>"; };
 		50C5E43F21349EFB008578EE /* AceList.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AceList.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		50C5E44221349EFB008578EE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		50C5E44421349EFB008578EE /* AceListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AceListViewController.swift; sourceTree = "<group>"; };
@@ -38,6 +40,7 @@
 		50BDF2CE2135D27B005925E0 /* Model */ = {
 			isa = PBXGroup;
 			children = (
+				507F26832135F9E900033EA7 /* Item.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -169,6 +172,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				50C5E44521349EFB008578EE /* AceListViewController.swift in Sources */,
+				507F26842135F9E900033EA7 /* Item.swift in Sources */,
 				50C5E44321349EFB008578EE /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

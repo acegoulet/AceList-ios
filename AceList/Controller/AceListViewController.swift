@@ -10,14 +10,23 @@ import UIKit
 
 class AceListViewController: UITableViewController {
     
-    var itemArray = ["Make App", "Market App", "Get Rich"]
+    //var itemArray = ["Make App", "Market App", "Get Rich"]
+    var itemArray = [Item]()
+    //let allItems = ItemData()
     
     let defaults = UserDefaults.standard
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+        itemArray.append(Item(itemTitle: "Make App", itemDone: false))
+        
+        itemArray.append(Item(itemTitle: "Market App", itemDone: true))
+        
+        itemArray.append(Item(itemTitle: "Get Rich", itemDone: false))
+        
+        //setup data from user defaults
+        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
             itemArray = items
         }
     }
@@ -34,7 +43,12 @@ class AceListViewController: UITableViewController {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "AceListItemCell", for: indexPath)
         
-        cell.textLabel?.text = itemArray[indexPath.row]
+        let item = itemArray[indexPath.row]
+        
+        cell.textLabel?.text = item.title
+        
+        //display checkmarks where appropriate
+        cell.accessoryType = item.done ? .checkmark : .none
         
         return cell
         
@@ -47,13 +61,12 @@ class AceListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //print(itemArray[indexPath.row])
         
-        if(tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark){
-            tableView.cellForRow(at: indexPath)?.accessoryType = .none
-        } else {
-            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
-        }
+        //swap checkmarks
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
+        tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
+        
     }
     
     
@@ -66,9 +79,11 @@ class AceListViewController: UITableViewController {
         let alert = UIAlertController(title: "Add New Item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             if let enteredText = textField.text, !enteredText.isEmpty {
-                self.itemArray.append(enteredText)
-                
+                //save to user defaults
                 self.defaults.setValue(self.itemArray, forKey: "TodoListArray")
+
+                self.itemArray.append(Item(itemTitle: enteredText, itemDone: false))
+                
                 self.tableView.reloadData()
             }
         }
