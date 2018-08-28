@@ -11,10 +11,15 @@ import UIKit
 class AceListViewController: UITableViewController {
     
     var itemArray = ["Make App", "Market App", "Get Rich"]
+    
+    let defaults = UserDefaults.standard
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+            itemArray = items
+        }
     }
     
     //MARK - Tableview Datasource Methods
@@ -62,6 +67,8 @@ class AceListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             if let enteredText = textField.text, !enteredText.isEmpty {
                 self.itemArray.append(enteredText)
+                
+                self.defaults.setValue(self.itemArray, forKey: "TodoListArray")
                 self.tableView.reloadData()
             }
         }
