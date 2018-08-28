@@ -25,10 +25,10 @@ class AceListViewController: UITableViewController {
         
         itemArray.append(Item(itemTitle: "Get Rich", itemDone: false))
         
-        //setup data from user defaults
-        if let items = defaults.array(forKey: "TodoListArray") as? [Item] {
-            itemArray = items
-        }
+//        setup data from user defaults
+//        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
+//            itemArray = items
+//        }
     }
     
     //MARK - Tableview Datasource Methods
@@ -80,7 +80,7 @@ class AceListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             if let enteredText = textField.text, !enteredText.isEmpty {
                 //save to user defaults
-                self.defaults.setValue(self.itemArray, forKey: "TodoListArray")
+                //self.defaults.setValue(self.itemArray, forKey: "TodoListArray")
 
                 self.itemArray.append(Item(itemTitle: enteredText, itemDone: false))
                 
