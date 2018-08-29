@@ -14,21 +14,28 @@ class AceListViewController: UITableViewController {
     var itemArray = [Item]()
     //let allItems = ItemData()
     
-    let defaults = UserDefaults.standard
-
+    //user defaults
+    //let defaults = UserDefaults.standard
+    
+    //encoded data file path
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        itemArray.append(Item(itemTitle: "Make App", itemDone: false))
-        
-        itemArray.append(Item(itemTitle: "Market App", itemDone: true))
-        
-        itemArray.append(Item(itemTitle: "Get Rich", itemDone: false))
+//        itemArray.append(Item(itemTitle: "Make App", itemDone: false))
+//
+//        itemArray.append(Item(itemTitle: "Market App", itemDone: true))
+//
+//        itemArray.append(Item(itemTitle: "Get Rich", itemDone: false))
         
 //        setup data from user defaults
 //        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
 //            itemArray = items
 //        }
+        
+        //setup data from encoded plist
+        loadItems()
     }
     
     //MARK - Tableview Datasource Methods
@@ -64,7 +71,8 @@ class AceListViewController: UITableViewController {
         //swap checkmarks
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        tableView.reloadData()
+        self.saveItems()
+    
         tableView.deselectRow(at: indexPath, animated: true)
         
     }
@@ -79,12 +87,14 @@ class AceListViewController: UITableViewController {
         let alert = UIAlertController(title: "Add New Item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             if let enteredText = textField.text, !enteredText.isEmpty {
-                //save to user defaults
-                //self.defaults.setValue(self.itemArray, forKey: "TodoListArray")
 
                 self.itemArray.append(Item(itemTitle: enteredText, itemDone: false))
                 
-                self.tableView.reloadData()
+                //save to user defaults
+                //self.defaults.setValue(self.itemArray, forKey: "TodoListArray")
+                
+                
+                self.saveItems()
             }
         }
         
@@ -99,6 +109,29 @@ class AceListViewController: UITableViewController {
         
     }
     
+    func saveItems(){
+        //save encoded data in custom plist
+        let encoder = PropertyListEncoder()
+        do {
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        } catch {
+            print("error encoding item array, \(error)")
+        }
+        tableView.reloadData()
+    }
+    
+    //setup data from encoded plist
+    func loadItems() {
+        if let data = try? Data(contentsOf: dataFilePath!){
+            let decoder = PropertyListDecoder()
+            do {
+                itemArray = try decoder.decode([Item].self, from: data)
+            } catch {
+                print("Error decoding item array, \(error)")
+            }
+        }
+    }
     
 }
 
