@@ -4,6 +4,7 @@ use_frameworks!
 
 def cocoa_pods
   pod 'RealmSwift'
+  pod 'SwipeCellKit'
 end
 
 target 'AceList' do

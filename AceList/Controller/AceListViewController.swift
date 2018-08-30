@@ -9,7 +9,7 @@
 import UIKit
 import RealmSwift
 
-class AceListViewController: UITableViewController {
+class AceListViewController: SwipeTableViewController {
     
     var items : Results<Item>?
     lazy var realm = try! Realm()
@@ -23,8 +23,6 @@ class AceListViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //setup data from coredata
-        //loadItems()
     }
     
     //MARK - Tableview Datasource Methods
@@ -37,7 +35,7 @@ class AceListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "AceListItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = items?[indexPath.row] {
             cell.textLabel?.text = item.title
@@ -64,7 +62,6 @@ class AceListViewController: UITableViewController {
                 try realm.write {
                     item.done = !item.done
                     item.dateModified = Date()
-                    //realm.delete(item)
                 }
             } catch {
                 print("error saving done status, \(error)")
@@ -123,6 +120,20 @@ class AceListViewController: UITableViewController {
         items = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
 
         tableView.reloadData()
+    }
+    
+    //delete data from swipe
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let itemToDelete = self.items?[indexPath.row]{
+            do {
+                try self.realm.write {
+                    self.realm.delete(itemToDelete)
+                }
+            } catch {
+                print("error deleting category \(error)")
+            }
+        }
     }
     
 }
