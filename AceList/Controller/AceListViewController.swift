@@ -7,11 +7,12 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class AceListViewController: UITableViewController {
     
-    var itemArray = [Item]()
+    var items : Results<Item>?
+    lazy var realm = try! Realm()
     
     var selectedCategory : Category? {
         didSet {
@@ -19,22 +20,18 @@ class AceListViewController: UITableViewController {
         }
     }
     
-    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-        
         //setup data from coredata
-        loadItems()
+        //loadItems()
     }
     
     //MARK - Tableview Datasource Methods
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
-        return itemArray.count
+        return items?.count ?? 1
         
     }
     
@@ -42,12 +39,14 @@ class AceListViewController: UITableViewController {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "AceListItemCell", for: indexPath)
         
-        let item = itemArray[indexPath.row]
-        
-        cell.textLabel?.text = item.title
-        
-        //display checkmarks where appropriate
-        cell.accessoryType = item.done ? .checkmark : .none
+        if let item = items?[indexPath.row] {
+            cell.textLabel?.text = item.title
+            
+            //display checkmarks where appropriate
+            cell.accessoryType = item.done ? .checkmark : .none
+        } else {
+            cell.textLabel?.text = "No items added"
+        }
         
         return cell
         
@@ -59,14 +58,20 @@ class AceListViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-//        context.delete(itemArray[indexPath.row])
-//        itemArray.remove(at: indexPath.row)
-        
         //swap checkmarks
-        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        if let item = items?[indexPath.row]{
+            do {
+                try realm.write {
+                    item.done = !item.done
+                    item.dateModified = Date()
+                    //realm.delete(item)
+                }
+            } catch {
+                print("error saving done status, \(error)")
+            }
+        }
+        tableView.reloadData()
         
-        saveItems()
-    
         tableView.deselectRow(at: indexPath, animated: true)
         
     }
@@ -82,14 +87,19 @@ class AceListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             if let enteredText = textField.text, !enteredText.isEmpty {
 
-                let newItem = Item(context: self.context)
-                newItem.title = enteredText
-                newItem.done = false
-                newItem.parentCategory = self.selectedCategory
+                if let currentCategory = self.selectedCategory {
+                    do {
+                        try self.realm.write{
+                            let newItem = Item()
+                            newItem.title = enteredText
+                            currentCategory.items.append(newItem)
+                        }
+                    } catch {
+                        print("Error saving new item, \(error)")
+                    }
+                }
                 
-                self.itemArray.append(newItem)
-                
-                self.saveItems()
+                self.tableView.reloadData()
             }
         }
         
@@ -106,32 +116,12 @@ class AceListViewController: UITableViewController {
     
     //MARK: - Manipulate Data model
     
-    func saveItems(){
-        do {
-            try context.save()
-        } catch {
-            print("error saving context \(error)")
-        }
-        tableView.reloadData()
-    }
     
     //read data from coredata
-    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
-        
-        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
-        
-        if let additionalPredicate = predicate {
-            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
-        } else {
-            request.predicate = categoryPredicate
-        }
-        
-        do {
-            itemArray = try context.fetch(request)
-        } catch {
-            print("error fetching data from context \(error)")
-        }
-        
+    func loadItems() {
+
+        items = selectedCategory?.items.sorted(byKeyPath: "dateCreated", ascending: true)
+
         tableView.reloadData()
     }
     
@@ -139,36 +129,32 @@ class AceListViewController: UITableViewController {
 
 //MARK: - Search bar methods
 extension AceListViewController: UISearchBarDelegate {
-    
+
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         if let enteredText = searchBar.text, !enteredText.isEmpty {
-            let request : NSFetchRequest<Item> = Item.fetchRequest()
-            
-            let predicate = NSPredicate(format: "title CONTAINS[cd] %@", enteredText)
-            
-            request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-            
-            loadItems(with: request, predicate: predicate)
-        } else {
-            loadItems()
+            items = items?.filter("title CONTAINS[cd] %@", enteredText).sorted(byKeyPath: "dateCreated", ascending: true)
+            tableView.reloadData()
         }
         searchBar.resignFirstResponder()
     }
+    
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0 {
             loadItems()
-            
+
             DispatchQueue.main.async {
                 searchBar.resignFirstResponder()
             }
         }
     }
+    
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         loadItems()
         searchBar.resignFirstResponder()
     }
+    
     func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
         searchBar.resignFirstResponder()
     }
-    
+
 }
