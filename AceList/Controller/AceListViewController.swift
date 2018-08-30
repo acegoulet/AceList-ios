@@ -7,34 +7,26 @@
 //
 
 import UIKit
+import CoreData
 
 class AceListViewController: UITableViewController {
     
-    //var itemArray = ["Make App", "Market App", "Get Rich"]
     var itemArray = [Item]()
-    //let allItems = ItemData()
     
-    //user defaults
-    //let defaults = UserDefaults.standard
+    var selectedCategory : Category? {
+        didSet {
+            loadItems()
+        }
+    }
     
-    //encoded data file path
-    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-//        itemArray.append(Item(itemTitle: "Make App", itemDone: false))
-//
-//        itemArray.append(Item(itemTitle: "Market App", itemDone: true))
-//
-//        itemArray.append(Item(itemTitle: "Get Rich", itemDone: false))
+        //print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         
-//        setup data from user defaults
-//        if let items = defaults.array(forKey: "TodoListArray") as? [String] {
-//            itemArray = items
-//        }
-        
-        //setup data from encoded plist
+        //setup data from coredata
         loadItems()
     }
     
@@ -63,22 +55,24 @@ class AceListViewController: UITableViewController {
     
     
     
-    //MARK - TableView Delegate Methods
+    //MARK: - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //print(itemArray[indexPath.row])
+        
+//        context.delete(itemArray[indexPath.row])
+//        itemArray.remove(at: indexPath.row)
         
         //swap checkmarks
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        self.saveItems()
+        saveItems()
     
         tableView.deselectRow(at: indexPath, animated: true)
         
     }
     
     
-    //MARK - Add new items
+    //MARK: - Add new items
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
@@ -88,18 +82,19 @@ class AceListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             if let enteredText = textField.text, !enteredText.isEmpty {
 
-                self.itemArray.append(Item(itemTitle: enteredText, itemDone: false))
+                let newItem = Item(context: self.context)
+                newItem.title = enteredText
+                newItem.done = false
+                newItem.parentCategory = self.selectedCategory
                 
-                //save to user defaults
-                //self.defaults.setValue(self.itemArray, forKey: "TodoListArray")
-                
+                self.itemArray.append(newItem)
                 
                 self.saveItems()
             }
         }
         
         alert.addTextField { (alertTextField) in
-            alertTextField.placeholder = "Enter New Item"
+            alertTextField.placeholder = "Item Title"
             textField = alertTextField
         }
         
@@ -109,29 +104,71 @@ class AceListViewController: UITableViewController {
         
     }
     
+    //MARK: - Manipulate Data model
+    
     func saveItems(){
-        //save encoded data in custom plist
-        let encoder = PropertyListEncoder()
         do {
-            let data = try encoder.encode(itemArray)
-            try data.write(to: dataFilePath!)
+            try context.save()
         } catch {
-            print("error encoding item array, \(error)")
+            print("error saving context \(error)")
         }
         tableView.reloadData()
     }
     
-    //setup data from encoded plist
-    func loadItems() {
-        if let data = try? Data(contentsOf: dataFilePath!){
-            let decoder = PropertyListDecoder()
-            do {
-                itemArray = try decoder.decode([Item].self, from: data)
-            } catch {
-                print("Error decoding item array, \(error)")
-            }
+    //read data from coredata
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) {
+        
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPredicate = predicate {
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        } else {
+            request.predicate = categoryPredicate
         }
+        
+        do {
+            itemArray = try context.fetch(request)
+        } catch {
+            print("error fetching data from context \(error)")
+        }
+        
+        tableView.reloadData()
     }
     
 }
 
+//MARK: - Search bar methods
+extension AceListViewController: UISearchBarDelegate {
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        if let enteredText = searchBar.text, !enteredText.isEmpty {
+            let request : NSFetchRequest<Item> = Item.fetchRequest()
+            
+            let predicate = NSPredicate(format: "title CONTAINS[cd] %@", enteredText)
+            
+            request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+            
+            loadItems(with: request, predicate: predicate)
+        } else {
+            loadItems()
+        }
+        searchBar.resignFirstResponder()
+    }
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadItems()
+            
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        loadItems()
+        searchBar.resignFirstResponder()
+    }
+    func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+    
+}
