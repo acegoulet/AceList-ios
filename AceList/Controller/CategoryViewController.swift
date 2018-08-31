@@ -18,7 +18,7 @@ class CategoryViewController: SwipeTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = UIColor(hexString: "#cccccc")
+        view.backgroundColor = UIColor(hexString: "#f1f1f1")
         tableView.rowHeight = 80
         loadCategories()
     }

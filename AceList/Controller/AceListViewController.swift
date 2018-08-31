@@ -73,6 +73,7 @@ class AceListViewController: SwipeTableViewController {
             if let color = UIColor(hexString: selectedCategory!.backgroundColor ?? "#FFFFFF")?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(items!.count)) {
                 cell.backgroundColor = color
                 cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+                cell.tintColor = ContrastColorOf(color, returnFlat: true)
             }
             
             //display checkmarks where appropriate
