@@ -8,6 +8,7 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
     
@@ -17,10 +18,14 @@ class CategoryViewController: SwipeTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        view.backgroundColor = UIColor(hexString: "#cccccc")
+        tableView.rowHeight = 80
         loadCategories()
     }
-
+    override func viewWillAppear(_ animated: Bool) {
+        guard let navBar = navigationController?.navigationBar else { fatalError("no nav bar, bro") }
+        navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor:FlatWhite()]
+    }
 
     //MARK: Add New Categories
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
@@ -33,7 +38,7 @@ class CategoryViewController: SwipeTableViewController {
                 
                 let newCategory = Category()
                 newCategory.name = enteredText
-                
+                newCategory.backgroundColor = UIColor.randomFlat.hexValue()
                 self.save(category: newCategory)
             }
         }
@@ -60,7 +65,13 @@ class CategoryViewController: SwipeTableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories added yet"
+        
+        if let category = categories?[indexPath.row] {
+            cell.textLabel?.text = category.name
+            let cellColor = UIColor(hexString: category.backgroundColor ?? "#FFFFFF")
+            cell.backgroundColor = cellColor
+            cell.textLabel?.textColor = ContrastColorOf(cellColor!, returnFlat: true)
+        }
         
         return cell
         

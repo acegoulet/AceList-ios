@@ -8,11 +8,15 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 class AceListViewController: SwipeTableViewController {
     
     var items : Results<Item>?
     lazy var realm = try! Realm()
+    
+    
+    @IBOutlet weak var searchBar: UISearchBar!
     
     var selectedCategory : Category? {
         didSet {
@@ -23,6 +27,32 @@ class AceListViewController: SwipeTableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        tableView.rowHeight = 80
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+
+        title = selectedCategory!.name
+        guard let navBG = selectedCategory?.backgroundColor else { fatalError() }
+        updateNavBar(withHexCode: navBG)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        updateNavBar(withHexCode: "#34CFB1")
+    }
+    
+    //MARK: - Nav Bar setup methods
+    
+    func updateNavBar(withHexCode colorHexCode: String){
+        guard let navBar = navigationController?.navigationBar else { fatalError("no nav bar, bro") }
+        guard let bgColor = UIColor(hexString: colorHexCode) else { fatalError() }
+        navBar.barTintColor = bgColor
+        navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor:ContrastColorOf(bgColor, returnFlat: true)]
+        navBar.tintColor = ContrastColorOf(bgColor, returnFlat: true)
+        searchBar.layer.borderColor = bgColor.cgColor
+        searchBar.barTintColor = bgColor
+        searchBar.layer.borderWidth = 1
+        view.backgroundColor = bgColor
     }
     
     //MARK - Tableview Datasource Methods
@@ -39,6 +69,11 @@ class AceListViewController: SwipeTableViewController {
         
         if let item = items?[indexPath.row] {
             cell.textLabel?.text = item.title
+            
+            if let color = UIColor(hexString: selectedCategory!.backgroundColor ?? "#FFFFFF")?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(items!.count)) {
+                cell.backgroundColor = color
+                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            }
             
             //display checkmarks where appropriate
             cell.accessoryType = item.done ? .checkmark : .none
@@ -89,6 +124,7 @@ class AceListViewController: SwipeTableViewController {
                         try self.realm.write{
                             let newItem = Item()
                             newItem.title = enteredText
+                            newItem.backgroundColor = UIColor.randomFlat.hexValue()
                             currentCategory.items.append(newItem)
                         }
                     } catch {

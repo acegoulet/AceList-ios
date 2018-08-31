@@ -20,11 +20,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //print(Realm.Configuration.defaultConfiguration.fileURL)
         
         Realm.Configuration.defaultConfiguration = Realm.Configuration(
-            schemaVersion: 9,
+            schemaVersion: 11,
             migrationBlock: { migration, oldSchemaVersion in
                 print("inside migration block")
                 if (oldSchemaVersion < 7) {
-                    print("inside migration block 2")
                     migration.enumerateObjects(ofType: Category.className()) { (old, new) in
                         new!["dateCreated"] = Date()
                     }
@@ -33,13 +32,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                     }
                 }
                 if (oldSchemaVersion < 9) {
-                    print("inside migration block 3")
                     migration.enumerateObjects(ofType: Category.className()) { (old, new) in
                         new!["dateModified"] = Date()
                     }
                     migration.enumerateObjects(ofType: Item.className()) { (old, new) in
                         new!["dateModified"] = Date()
                     }
+                }
+                if (oldSchemaVersion < 10) {
+                    migration.enumerateObjects(ofType: Category.className()) { (old, new) in
+                        new!["backgroundColor"] = "FFFFFF"
+                    }
+                    migration.enumerateObjects(ofType: Item.className()) { (old, new) in
+                        new!["backgroundColor"] = "FFFFFF"
+                    }
+                }
+                if (oldSchemaVersion < 11) {
                 }
         })
         _ = try! Realm()

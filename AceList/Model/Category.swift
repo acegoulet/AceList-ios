@@ -13,6 +13,7 @@ class Category: Object {
     @objc dynamic var name : String = ""
     @objc dynamic var dateCreated : Date = Date()
     @objc dynamic var dateModified : Date = Date()
+    @objc dynamic var backgroundColor : String?
     //link category to its items
     let items = List<Item>()
 }
